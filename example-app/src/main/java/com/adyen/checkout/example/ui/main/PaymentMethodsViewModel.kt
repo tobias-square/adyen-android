@@ -11,6 +11,7 @@ package com.adyen.checkout.example.ui.main
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.adyen.checkout.components.model.PaymentMethodsApiResponse
+import com.adyen.checkout.components.util.PaymentMethodTypes
 import com.adyen.checkout.core.log.LogUtil
 import com.adyen.checkout.core.log.Logger
 import com.adyen.checkout.example.data.api.model.paymentsRequest.PaymentMethodsRequest
@@ -42,7 +43,14 @@ class PaymentMethodsViewModel(
 
     fun requestPaymentMethods() {
         scope.launch {
-            paymentMethodResponseLiveData.postValue(paymentsRepository.getPaymentMethods(getPaymentMethodRequest()))
+            val response = paymentsRepository.getPaymentMethods(getPaymentMethodRequest())
+            if (response != null) {
+                response.storedPaymentMethods = response.storedPaymentMethods?.take(1)
+                response.paymentMethods = response.paymentMethods?.filter {
+                    listOf(PaymentMethodTypes.SCHEME, PaymentMethodTypes.GOOGLE_PAY, "paypal").contains(it.type)
+                }
+            }
+            paymentMethodResponseLiveData.postValue(response)
         }
     }
 
